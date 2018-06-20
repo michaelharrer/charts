@@ -1,0 +1,41 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "elcep.name" . }}
+  labels:
+    app: {{ template "elcep.name" . }}
+    chart: {{ template "elcep.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "elcep.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "elcep.name" . }}
+        release: {{ .Release.Name }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          args:
+            - "-url"
+            - "{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}"
+          volumeMounts:
+            - name: elcep-queries
+              mountPath: "/app/conf"
+      volumes:
+        - name: elcep-queries
+          configMap:
+            name: elcep-queries

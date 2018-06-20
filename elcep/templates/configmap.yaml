@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elcep-queries
+  labels:
+    app: {{ template "elcep.name" . }}
+    chart: {{ template "elcep.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data: 
+  queries.cfg: |- 
+    {{- range $querie := .Values.files.queries }}
+    {{ $querie }}
+    {{- end }}
